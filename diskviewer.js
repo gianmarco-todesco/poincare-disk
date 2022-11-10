@@ -23,38 +23,31 @@ class DiskViewer {
         this.handleKeyboardEvents();  
 
         this.running = true;
-        this.points = [{x:0,y:0},{x:0.1,y:0.1}];
-
-        let hline = new HLine(1,0,0);
-        this.lines = [hline];
+        this.points = [];
+        this.lines = [];
         
+        this.animate();
+    }
 
-        // animate function
-        const animate = function(time) {
-            if(!viewer.running) return;
-            // let t0 = performance.now();
-            twgl.resizeCanvasToDisplaySize(gl.canvas);
-            gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
-            gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-            const aspect = gl.canvas.clientWidth / gl.canvas.clientHeight;
-            let rr = 1.1;    
-            twgl.m4.ortho(-aspect*rr, aspect*rr, rr, -rr, -1, 1, viewMatrix);
+    animate(dtime) {
+        const gl = this.gl;
+        if(!this.running) return;
+        // let t0 = performance.now();
+        twgl.resizeCanvasToDisplaySize(gl.canvas);
+        gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
+        gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+        const aspect = gl.canvas.clientWidth / gl.canvas.clientHeight;
+        let rr = 1.1;    
+        twgl.m4.ortho(-aspect*rr, aspect*rr, rr, -rr, -1, 1, viewMatrix);
 
-            viewer.entities.disk.material.setColor([1,1,1,1]);
-            viewer.entities.disk.draw();
-            
-            viewer.render();
-            
-            //viewer.entities.dot.material.setColor([1,0,0,1]);
-            //viewer.entities.dot.draw();
-
-            
+        this.entities.disk.material.setColor([1,1,1,1]);
+        this.entities.disk.draw();
+        
+        this.paint();
     
-            viewer.entities.circle.material.setColor([0,0,0,1]);
-            viewer.entities.circle.draw();
-            requestAnimationFrame(animate);
-        }
-        requestAnimationFrame(animate);      
+        this.entities.circle.material.setColor([0,0,0,1]);
+        this.entities.circle.draw();
+        requestAnimationFrame((dt)=>this.animate(dt))
     }
 
     stop() {
@@ -77,7 +70,7 @@ class DiskViewer {
         else return null;
     }
     */
-    render() {
+    paint() {
         //this.drawDot(0.0);
         //this.drawDot(0.3);
 
@@ -213,12 +206,15 @@ class DiskViewer {
 class AddHLineTool {
     onPointerDown(viewer, p) {
         console.log(p);
-        viewer.points.push(p);
-        this.p0 = p;
+
+        viewer.points.push(this.p0 = {x:p.x, y:p.y});
+        viewer.points.push(this.p1 = {x:p.x, y:p.y});
         this.hline = undefined;
     }
     onPointerDrag(viewer, p) {
         if(p.x != this.p0.x || p.y != this.p0.y) {
+            this.p1.x = p.x;
+            this.p1.y = p.y;            
             if(!this.hline) {
                 this.hline =  new HLine(1,0,0);
                 this.hline.setByPoints([this.p0.x,this.p0.y ], [p.x,p.y]);
@@ -271,4 +267,11 @@ class MoveHLineTool {
     onPointerUp(viewer) {
         this.line = undefined;
     }
+}
+
+class MovePointTool {
+    onPointerDown(viewer, p) {}
+    onPointerDrag(viewer, p) {}
+    onPointerUp(viewer, p) {}
+    
 }

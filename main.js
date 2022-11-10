@@ -3,7 +3,7 @@ let viewer;
 document.addEventListener('DOMContentLoaded', createLayout);
 
 
-function addToolButton(container, text, tool) {
+function addToolButton(container, text, viewer, tool) {
     let btn = document.createElement('div');
     btn.innerHTML = text;
     btn.classList.add('tool-btn');
@@ -26,11 +26,17 @@ function createLayout() {
     controlPanel.classList.add('control-panel');
     mainContainer.appendChild(controlPanel);
 
-    addToolButton(controlPanel, "uno", new AddHLineTool());
-    addToolButton(controlPanel, "due", new MoveHLineTool());
-    
-
     viewer = new DiskViewer(canvas);
+
+    let buttons = [];
+    let btn;
+    btn = addToolButton(controlPanel, "uno", viewer, new AddHLineTool());
+    buttons.push(btn);
+    btn = addToolButton(controlPanel, "due", viewer, new MoveHLineTool());
+    buttons.push(btn);
+    
+    buttons[0].click();
+
 
     let style = document.createElement('style');
     style.innerHTML = `
@@ -57,6 +63,9 @@ function createLayout() {
             border-radius:10px;
             border:solid 1px gray;
             margin:10px;
+            cursor: pointer;
+            text-align: center;
+            line-height:30px;
         }
         .tool-btn:hover {
             filter: brightness(85%);
