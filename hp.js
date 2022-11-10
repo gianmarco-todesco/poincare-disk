@@ -3,17 +3,17 @@ const m4 = twgl.m4;
 
 
 function invertPoint(p) {
-    const [x,y] = p;
+    const {x,y} = p;
     let factor = 1.0/(x*x+y*y);
-    return [x*factor, y*factor]
+    return {x: x*factor, y: y*factor};
 }
 
 function getDistance(pa,pb) {
-    return Math.sqrt(Math.pow(pb[0]-pa[0],2) + Math.pow(pb[1]-pa[1],2));
+    return Math.sqrt(Math.pow(pb.x-pa.x,2) + Math.pow(pb.y-pa.y,2));
 }
 
 function getLength(p) {
-    return Math.sqrt(p[0]*p[0] + p[1]*p[1]);
+    return Math.sqrt(p.x*p.x+p.y*p.y);
 }
 
 
@@ -41,7 +41,7 @@ function hTranslation(dx, dy) {
                 0.0, 0.0, 0.0, 1.0
             ]));
 }
-hTranslation1 = hTranslation;
+// hTranslation1 = hTranslation;
 
 /*
 
@@ -63,23 +63,23 @@ hTranslation1 = hTranslation;
   
 // poincaré to hyperboloid 
 function p2h(p) { 
-    let t = 2.0/(1.0-(p[0]*p[0]+p[1]*p[1])); 
-    return [t*p[0],t*p[1],t-1.0,1.0]; 
+    let t = 2.0/(1.0-(p.x*p.x+p.y*p.y)); 
+    return [t*p.x,t*p.y,t-1.0,1.0]; 
 }
 // hyperboloid to poincaré
 function h2p(p) {
     let d = 1.0/(p[3] + p[2]);
-    return [p[0]*d, p[1]*d];
+    return {x:p[0]*d, y:p[1]*d};
 }
 // poincaré to klein
 function p2k(p) {
-    let s = 2.0/(1.0 + p[0]*p[0] + p[1]*p[1]);
-    return [s*p[0], s*p[1]]
+    let s = 2.0/(1.0 + p.x*p.x + p.y*p.y);
+    return {x:s*p.x, y:s*p.y};
 }
 // klein to poincaré
 function k2p(p) {
-    let s = 1.0/(1.0 + Math.sqrt(1.0 - p[0]*p[0] - p[1]*p[1]));
-    return [s*p[0], s*p[1]]
+    let s = 1.0/(1.0 + Math.sqrt(1.0 - p.x*p.x - p.y*p.y));
+    return {x:s*p.x, y:s*p.y}
 }
 
 // poincaré => hyperboloid => transform => poincaré
@@ -102,20 +102,20 @@ function pMidPoint(a,b) {
 
 function normalizeHMatrix(hmatrix) {
     let p = pTransform(hmatrix, [0,0]);
-    let hmatrix1 = m4.multiply(hTranslation(-p[0], -p[1]), hmatrix);
-    let q = pTransform(hmatrix1, [0.5,0]);
-    let phi = Math.atan2(q[1],q[0]);
-    return m4.multiply(hTranslation(p[0], p[1]), m4.rotationZ(phi));
+    let hmatrix1 = m4.multiply(hTranslation(-p.x, -p.y), hmatrix);
+    let q = pTransform(hmatrix1, {x:0.5, y:0});
+    let phi = Math.atan2(q.y,q.x);
+    return m4.multiply(hTranslation(p.x, p.y), m4.rotationZ(phi));
 }
 
-// return a circle passing by three points : [cx,cy,r]
+// return a circle passing by three points : {cx,cy,r}
 // see: https://www.geeksforgeeks.org/equation-of-circle-when-three-points-on-the-circle-are-given/
 function getCircle(p1, p2, p3)
 {
-    let [x1,y1] = p1;
-    let [x2,y2] = p2;
-    let [x3,y3] = p3;
-    
+    let x1 = p1.x, y1 = p1.y;
+    let x2 = p2.x, y2 = p2.y;
+    let x3 = p3.x, y3 = p3.y;
+   
     let x12 = x1 - x2;
     let x13 = x1 - x3;
  
@@ -168,7 +168,7 @@ function getCircle(p1, p2, p3)
     let cy = -f;
     // r is the radius
     let r = Math.sqrt(cx * cx + cy * cy - c);
-    return [cx,cy,r]
+    return {cx,cy,r}
 }
 
 
@@ -177,9 +177,9 @@ function getCircle(p1, p2, p3)
 // see: https://www.geeksforgeeks.org/equation-of-circle-when-three-points-on-the-circle-are-given/
 function getCircleArc(p1, p2, p3)
 {
-    let [x1,y1] = p1;
-    let [x2,y2] = p2;
-    let [x3,y3] = p3;
+    let x1 = p1.x, y1 = p1.y;
+    let x2 = p2.x, y2 = p2.y;
+    let x3 = p3.x, y3 = p3.y;
     
     let x12 = x1 - x2;
     let x13 = x1 - x3;
@@ -243,7 +243,7 @@ function getCircleArc(p1, p2, p3)
         let dy = y - cy;
         let d = Math.sqrt(dx*dx+dy*dy);
         let s = r/d;
-        return [cx + dx*s, cy + dy*s];        
+        return {x: cx + dx*s, y: cy + dy*s};        
     }
 }
 
@@ -272,15 +272,15 @@ class HLine {
             let c2 = cx*cx + cy*cy;
             this.r = Math.sqrt(c2 - 1.0);
             let c = Math.sqrt(c2);
-            this.e0 = [-cx/c, -cy/c];
-            this.e1 = [-this.e0[1], this.e0[0]];
+            this.e0 = {x:-cx/c, y:-cy/c};
+            this.e1 = {x:-this.e0.y, y:this.e0.x};
             this.theta = Math.acos(this.r/c);            
         }
     }
 
     setByPoints(p0, p1) {
-        const [x0,y0] = p0;
-        const [x1,y1] = p1;
+        const x0 = p0.x, y0 = p0.y;
+        const x1 = p1.x, y1 = p1.y;
         const eps = 1.0e-7;
         // check punti coincidenti
         if(Math.pow(x1-x0,2)+Math.pow(y1-y0,2)<eps) return;
@@ -293,17 +293,15 @@ class HLine {
         if(Math.abs(q) < eps) {
             // punti allineati con il centro
             let p = d1>d0 ? p1 : p0;
-            let x = -p[1], y = p[0];
+            let x = -p.y, y = p.x;
             let r = Math.sqrt(x*x+y*y);
             this.setParameters(x/r,y/r,0.0);
         } else {
             // punti non allineati
             let p = invertPoint(d1>d0 ? p1 : p0);
             let circle = getCircle(p0,p1,p);
-            this.setParameters(circle[0],circle[1],1.0);
-        }
-        
-        
+            this.setParameters(circle.cx,circle.cy,1.0);
+        }        
     }
 
     getPoint(t, w = 0.0) {
@@ -317,14 +315,14 @@ class HLine {
         } else {
             let angle = this.theta * (-1 + 2.0*t);
             let cs = Math.cos(angle), sn = Math.sin(angle);
-            wx = this.e0[0] * cs + this.e1[0] * sn;
-            wy = this.e0[1] * cs + this.e1[1] * sn;
+            wx = this.e0.x * cs + this.e1.x * sn;
+            wy = this.e0.y * cs + this.e1.y * sn;
             
             x = this.cx + wx * this.r;
             y = this.cy + wy * this.r;            
         }
         let ww = w != 0.0 ? w * getHThickness(x,y) : 0;
-        return [x + wx*ww, y + wy*ww];
+        return {x: x + wx*ww, y: y + wy*ww};
     }
 
 
@@ -333,25 +331,25 @@ class HLine {
             // diametro
             let u = this.csPhi * x + this.snPhi * y;
             let v = -this.snPhi * x + this.csPhi * y;
-            if(u>1) return getDistance([x,y], [this.csPhi, this.snPhi]);
-            else if(u<-1) return getDistance([x,y], [-this.csPhi, -this.snPhi]);
+            if(u>1) return getDistance({x,y}, {x:this.csPhi, y:this.snPhi});
+            else if(u<-1) return getDistance({x,y}, {x:-this.csPhi, y:-this.snPhi});
             else return Math.abs(v);
         } else {
             let xx = x - this.cx, yy = y - this.cy;
-            if(xx*this.e1[0] + yy*this.e1[1] < 0) 
+            if(xx*this.e1.x + yy*this.e1.y < 0) 
             {
                 let p = this.getPoint(0);
-                if(xx * (p[1]-this.cy) - yy * (p[0]-this.cx) > 0) 
-                    return getDistance([x,y], p);
+                if(xx * (p.y-this.cy) - yy * (p.x-this.cx) > 0) 
+                    return getDistance({x,y}, p);
             }
             else 
             {
                 let p = this.getPoint(1);
-                if(xx * (p[1]-this.cy) - yy * (p[0]-this.cx) < 0) 
-                    return getDistance([x,y], p);
+                if(xx * (p.y-this.cy) - yy * (p.x-this.cx) < 0) 
+                    return getDistance({x,y}, p);
                 
             }
-            let r = getDistance([x,y], [this.cx,this.cy]);
+            let r = getDistance({x,y}, {x:this.cx,y:this.cy});
             return Math.abs(r - this.r);
         }
     }
@@ -382,7 +380,7 @@ class HLine {
 
 }
 
-
+/*
 
 class HSegment {
     constructor(p0, p1) {
@@ -451,3 +449,4 @@ class HSegment {
         return this._getPoint(t,w);
     }
 }
+*/

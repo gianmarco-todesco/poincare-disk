@@ -71,8 +71,8 @@ class HLineMesh extends Mesh {
             let t = i/(m-1);
             w *= 1.0 + 5*(Math.abs(t-0.5)*2)**3;
             let p = hline.getPoint(i/(m-1),w);
-            buffer[i*2] = p[0];
-            buffer[i*2+1] = p[1];            
+            buffer[i*2] = p.x;
+            buffer[i*2+1] = p.y;            
         }
     }
     setByPoints(p0, p1) {
@@ -98,8 +98,8 @@ class HLineThinMesh extends Mesh {
         const buffer = this.attributes.position.data;
         for(let i=0;i<m;i++) {
             let p = hline.getPoint(i/(m-1),0.0);
-            buffer[i*2] = p[0];
-            buffer[i*2+1] = p[1];            
+            buffer[i*2] = p.x;
+            buffer[i*2+1] = p.y;            
         }
     }
     setByPoints(p0, p1) {

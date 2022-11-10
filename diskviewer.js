@@ -54,6 +54,11 @@ class DiskViewer {
         this.running = false;
     }
 
+    getClosestDot(p, maxDistance = 10) {
+        let lst = this.points.map(q=>({q, d:getDistance(p,q)})).filter(q=>q.d<maxDistance);
+        return lst;
+    } 
+
     /*
     getDotNearby(p) {
         if(!this.currentScene || !this.currentScene.draggableDots) return null;
@@ -88,8 +93,8 @@ class DiskViewer {
             if(e.w != 0.0) {
                 this.drawDot(e.cx,e.cy);
                 let p;
-                p = e.getPoint(0);this.drawDot(p[0],p[1]);
-                p = e.getPoint(1);this.drawDot(p[0],p[1]);
+                p = e.getPoint(0);this.drawDot(p.x,p.y);
+                p = e.getPoint(1);this.drawDot(p.x,p.y);
 
 
             }
@@ -116,8 +121,8 @@ class DiskViewer {
         let r = this.canvas.getBoundingClientRect();
         let x = 2*(e.clientX - r.x - canvasBorder)/this.canvas.width-1;
         let y = 2*(e.clientY - r.y - canvasBorder)/this.canvas.height-1;
-        let p = twgl.m4.transformPoint(twgl.m4.inverse(viewMatrix), [x,y,0]);
-        return [p[0],-p[1]]
+        let p = twgl.m4.transformPoint(twgl.m4.inverse(viewMatrix), [x,y,0,1]);
+        return {x:p[0],y:-p[1]}
     }
 
     drawDot(x,y) {
@@ -138,10 +143,11 @@ class DiskViewer {
 
     _onPointerDown(e) {
         let p = this.pointerPosToWordPos(e);
+        console.log(p)
         this.oldp = p;
         this.canvas.setPointerCapture(e.pointerId);
         this.buttonDown = true;
-        if(this.tool && this.tool.onPointerDown) this.tool.onPointerDown(this, {x:p[0], y:p[1]}, e);
+        if(this.tool && this.tool.onPointerDown) this.tool.onPointerDown(this, p, e);
     }
     _onPointerUp(e) {
         this.buttonDown = false;
@@ -152,12 +158,12 @@ class DiskViewer {
         let p = this.pointerPosToWordPos(e);
         if(this.buttonDown) {
             // drag            
-            let dx = p[0] - this.oldp[0];
-            let dy = p[1] - this.oldp[1];
-            this.oldp[0] = p[0];
-            this.oldp[1] = p[1];    
+            let dx = p.x - this.oldp.x;
+            let dy = p.y - this.oldp.y;
+            this.oldp.x = p.x;
+            this.oldp.y = p.y;    
             if(this.tool && this.tool.onPointerDrag) 
-                this.tool.onPointerDrag(this, {x:p[0], y:p[1]}, e);    
+                this.tool.onPointerDrag(this, p, e);    
         }
     }
     
@@ -217,10 +223,10 @@ class AddHLineTool {
             this.p1.y = p.y;            
             if(!this.hline) {
                 this.hline =  new HLine(1,0,0);
-                this.hline.setByPoints([this.p0.x,this.p0.y ], [p.x,p.y]);
+                this.hline.setByPoints(this.p0, p);
                 viewer.lines.push(this.hline);                
             } else {
-                this.hline.setByPoints([this.p0.x,this.p0.y ], [p.x,p.y]);
+                this.hline.setByPoints(this.p0, p);
             }
         }
     }
@@ -270,7 +276,10 @@ class MoveHLineTool {
 }
 
 class MovePointTool {
-    onPointerDown(viewer, p) {}
+    onPointerDown(viewer, p) {
+        let q = viewer.getClosestDot(p);
+        console.log(q);
+    }
     onPointerDrag(viewer, p) {}
     onPointerUp(viewer, p) {}
     

@@ -30,9 +30,11 @@ function createLayout() {
 
     let buttons = [];
     let btn;
-    btn = addToolButton(controlPanel, "uno", viewer, new AddHLineTool());
+    btn = addToolButton(controlPanel, "add line", viewer, new AddHLineTool());
     buttons.push(btn);
-    btn = addToolButton(controlPanel, "due", viewer, new MoveHLineTool());
+    btn = addToolButton(controlPanel, "bu", viewer, new MoveHLineTool());
+    buttons.push(btn);
+    btn = addToolButton(controlPanel, "move", viewer, new MovePointTool());
     buttons.push(btn);
     
     buttons[0].click();
@@ -58,7 +60,7 @@ function createLayout() {
         }
         .tool-btn {
             background-color:cyan;
-            width:50px;
+            width:70px;
             height:30px;
             border-radius:10px;
             border:solid 1px gray;
