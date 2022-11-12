@@ -1,5 +1,25 @@
+"use strict";
 
+// geometry.js
+//
+// functions to deal with geometric objects (both on euclidean and hyperbolic plane)
 const m4 = twgl.m4;
+
+// Point: a point in euclidean plane
+class Point {
+    constructor(x,y) {
+        this.x = x;
+        this.y = y;
+    }
+    add(other) { return new Point(this.x+other.x, this.y+other.y); }
+    sub(other) { return new Point(this.x-other.x, this.y-other.y); }
+    scale(k) { return new Point(this.x*k, this.y*k); }
+    scaleInPlace(k) { this.x*=k; this.y*=k; return this; }
+    getLength() { return Math.sqrt(this.x*this.x + this.y*this.y)}
+    normalized() { return this.scale(1.0/this.getLength()); }
+}
+
+Point.dot = function(a,b) { return a.x*b.x+a.y*b.y; }
 
 
 function invertPoint(p) {
@@ -297,11 +317,32 @@ class HLine {
             let r = Math.sqrt(x*x+y*y);
             this.setParameters(x/r,y/r,0.0);
         } else {
+            /*
             // punti non allineati
             let p = invertPoint(d1>d0 ? p1 : p0);
+            
+            */
+            let pk0 = p2k(p0);
+            let pk1 = p2k(p1);            
+            let p = k2p({x:(pk0.x+pk1.x)/2, y:(pk0.y+pk1.y)/2});
             let circle = getCircle(p0,p1,p);
             this.setParameters(circle.cx,circle.cy,1.0);
         }        
+    }
+
+    setByPointAndDir(p, u) {
+        // voglio una HLine che passi per p e sia perpendicolare a u
+        u = u.normalized();
+        let pd = Point.dot(p,u);
+        if(Math.abs(pd)<1.0e-8) {
+            p = p.normalized();
+            this.setParameters(p.x, p.y, 0.0);
+        } else {
+            let lambda = (1 - Point.dot(p,p))/(2*pd);
+            let r = Math.abs(lambda);
+            let q = p.add(u.scale(lambda));
+            this.setParameters(q.x, q.y, 1);
+        }
     }
 
     getPoint(t, w = 0.0) {
@@ -322,11 +363,29 @@ class HLine {
             y = this.cy + wy * this.r;            
         }
         let ww = w != 0.0 ? w * getHThickness(x,y) : 0;
-        return {x: x + wx*ww, y: y + wy*ww};
+        return new Point(x + wx*ww, y + wy*ww);
     }
 
+    
+    getParameterAt(p) {
+        let t;
+        if(this.w == 0.0) {
+            t = p.x * this.csPhi + p.y * this.snPhi;
+            
+        } else {
+            let px = p.x - this.cx;
+            let py = p.y - this.cy;            
+            let x = this.e0.x * px + this.e0.y * py;
+            let y = this.e1.x * px + this.e1.y * py;
+            t = Math.atan2(y,x) / this.theta;
+            
+        }
+        return Math.max(0, Math.min(1, 0.5 + t*0.5));
+    }
+    
 
-    getDist(x, y) {
+    getDist(p) {
+        const {x,y} = p;
         if(this.w == 0.0) {
             // diametro
             let u = this.csPhi * x + this.snPhi * y;
@@ -378,7 +437,17 @@ class HLine {
         }
     }
 
+    moveTo(p) {
+        if(this.w == 0.0) {
+
+        } else {
+            let dir = new Point(this.cx - p.x, this.cy - p.y);
+            this.setByPointAndDir(p, dir);
+        }
+    }
 }
+
+
 
 /*
 
