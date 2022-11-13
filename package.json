@@ -1,0 +1,24 @@
+{
+  "name": "poincare-disk",
+  "version": "1.0.0",
+  "description": "The Poincaré disk with WebGL",
+  "main": "main.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/gianmarco-todesco/poincare-disk.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/gianmarco-todesco/poincare-disk/issues"
+  },
+  "homepage": "https://github.com/gianmarco-todesco/poincare-disk#readme",
+  "devDependencies": {
+    "webpack": "^5.75.0",
+    "webpack-cli": "^4.10.0"
+  }
+}

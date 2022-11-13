@@ -1,4 +1,5 @@
 "use strict";
+import * as twgl from './twgl-full.min.js';
 
 // geometry.js
 //
@@ -17,6 +18,7 @@ class Point {
     scaleInPlace(k) { this.x*=k; this.y*=k; return this; }
     getLength() { return Math.sqrt(this.x*this.x + this.y*this.y)}
     normalized() { return this.scale(1.0/this.getLength()); }
+    copyFrom(other) { this.x = other.x; this.y = other.y; return this; }
 }
 
 Point.dot = function(a,b) { return a.x*b.x+a.y*b.y; }
@@ -31,6 +33,8 @@ function invertPoint(p) {
 function getDistance(pa,pb) {
     return Math.sqrt(Math.pow(pb.x-pa.x,2) + Math.pow(pb.y-pa.y,2));
 }
+
+Point.getDistance = getDistance;
 
 function getLength(p) {
     return Math.sqrt(p.x*p.x+p.y*p.y);
@@ -164,6 +168,7 @@ function getCircle(p1, p2, p3)
     if(Math.abs(fden)<eps || Math.abs(gden) < eps)
     {
         // punti allineati
+        console.warn("Punti allineati!!", fden, gden)
         return null;
     }
     
@@ -326,7 +331,12 @@ class HLine {
             let pk1 = p2k(p1);            
             let p = k2p({x:(pk0.x+pk1.x)/2, y:(pk0.y+pk1.y)/2});
             let circle = getCircle(p0,p1,p);
-            this.setParameters(circle.cx,circle.cy,1.0);
+            if(circle)
+                this.setParameters(circle.cx,circle.cy,1.0);
+            else {
+                console.warn(p0,p1,p)
+
+                }
         }        
     }
 
@@ -383,6 +393,9 @@ class HLine {
         return Math.max(0, Math.min(1, 0.5 + t*0.5));
     }
     
+    projectPoint(p) {
+        return this.getPoint(this.getParameterAt(p));
+    }
 
     getDist(p) {
         const {x,y} = p;
@@ -424,8 +437,8 @@ class HLine {
             ].reduce((a,b) => m4.multiply(a,b));
         } else {
             // closest point to the origin
-            let x = this.cx + this.r * this.e0[0];
-            let y = this.cy + this.r * this.e0[1];
+            let x = this.cx + this.r * this.e0.x;
+            let y = this.cy + this.r * this.e0.y;
             return [
                 hTranslation(x, y),
                 m4.rotationZ(-phi),
@@ -519,3 +532,5 @@ class HSegment {
     }
 }
 */
+
+export { Point, HLine }

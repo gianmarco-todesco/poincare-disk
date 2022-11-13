@@ -1,17 +1,25 @@
+"use strict";
+import * as twgl from './twgl-full.min.js';
+
+
 let currentMaterial = null;
+
+/*
 const viewMatrix = twgl.m4.identity();
 const modelMatrix = twgl.m4.identity();
 const hViewMatrix = twgl.m4.identity();
 
 let simpleMaterial;
 let simpleHyperbolicMaterial;
+*/
 
 // -----------------------------
 // Material
 // -----------------------------
 class Material {
-    constructor(gl, options) {
-        this.gl = gl;
+    constructor(viewer, options) {
+        this.viewer = viewer;
+        const gl = this.gl = viewer.gl;
         let vs = options.vs;
         let fs = options.fs;
         this.uniforms = options.uniforms;
@@ -45,8 +53,8 @@ class Material {
 // SimpleMaterial
 // -----------------------------
 class SimpleMaterial extends Material {
-    constructor(gl) {
-        super(gl, {
+    constructor(viewer) {
+        super(viewer, {
             vs : `
             precision mediump float;
             attribute vec2 position;
@@ -64,8 +72,8 @@ class SimpleMaterial extends Material {
             `,
             uniforms: {
                 color: [0.0,0.0,0.0,1.0],
-                viewMatrix: viewMatrix,
-                modelMatrix: modelMatrix
+                viewMatrix: viewer.viewMatrix,
+                modelMatrix: viewer.modelMatrix
             }
         });
     }
@@ -171,12 +179,13 @@ class SimpleHyperbolicMaterial extends Material {
     }
 };
 
-
+/*
 
 function getSimpleMaterial(gl) {
     if(!simpleMaterial) simpleMaterial = new SimpleMaterial(gl);
     return simpleMaterial;
 }
+*/
 
 function getSimpleHyperbolicMaterial(gl) {
     if(!simpleHyperbolicMaterial) simpleHyperbolicMaterial = new SimpleHyperbolicMaterial(gl);
@@ -314,8 +323,8 @@ class HyperbolicTexturedMaterialBis extends Material {
 
 
 class HyperbolicInvertedTexturedMaterial extends Material {
-    constructor(gl) {
-        super(gl, {
+    constructor(viewer) {
+        super(viewer, {
             vs : `
             precision mediump float;
             attribute vec2 position;
@@ -355,7 +364,7 @@ class HyperbolicInvertedTexturedMaterial extends Material {
             `,
             uniforms: {
                 color: [0.0,0.0,0.0,1.0],
-                viewMatrix: viewMatrix,
+                viewMatrix: viewer.viewMatrix,
                 hModelMatrix: twgl.m4.identity(),
                 hViewMatrix: twgl.m4.identity(),
                 texture: null // twgl.createTexture(gl, {src:'images/full-circle.png'})
@@ -449,3 +458,5 @@ class HyperbolicPalettedTexturedMaterial extends Material {
         for(let i=0;i<4;i++) this.uniforms.color[i] = rgba[i];        
     }
 };
+
+export { Material, SimpleMaterial, HyperbolicInvertedTexturedMaterial }

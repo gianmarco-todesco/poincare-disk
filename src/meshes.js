@@ -1,3 +1,8 @@
+"use strict";
+
+import * as twgl from './twgl-full.min.js';
+import { getSimpleMaterial } from './materials';
+import { HLine } from './geometry';
 
 // -----------------------------
 // Mesh
@@ -23,8 +28,8 @@ class Mesh {
 
 
 class Circle extends Mesh {
-    constructor(gl, r, thickness, m) {
-        super(gl, gl.TRIANGLE_STRIP, getSimpleMaterial(gl));
+    constructor(gl, material, r, thickness, m) {
+        super(gl, gl.TRIANGLE_STRIP, material);
         const attributes = { position: { data: [], numComponents: 2 } };    
         let r0 = r-thickness;
         let r1 = r+thickness;
@@ -39,8 +44,8 @@ class Circle extends Mesh {
 
 
 class Disk extends Mesh {
-    constructor(gl,r, m) {
-        super(gl, gl.TRIANGLE_FAN, getSimpleMaterial(gl));
+    constructor(gl, material, r, m) {
+        super(gl, gl.TRIANGLE_FAN, material);
         const attributes = { position: { data: [], numComponents: 2 } };    
         attributes.position.data.push(0.0, 0.0);
         for(let i=0;i<m;i++) {
@@ -54,8 +59,8 @@ class Disk extends Mesh {
 
 
 class HLineMesh extends Mesh {
-    constructor(gl, m) {
-        super(gl, gl.TRIANGLE_STRIP, getSimpleMaterial(gl));
+    constructor(gl, material, m) {
+        super(gl, gl.TRIANGLE_STRIP, material);
         this.m = m;
         this.hline = new HLine(0,1,0);
         const attributes = this.attributes = { position: { data: new Array(m*2), numComponents: 2 } };    
@@ -84,8 +89,40 @@ class HLineMesh extends Mesh {
 
 
 class HLineThinMesh extends Mesh {
-    constructor(gl, m) {
-        super(gl, gl.LINE_STRIP, getSimpleMaterial(gl));
+    constructor(gl, material, m) {
+        super(gl, gl.LINE_STRIP, material);
+        this.m = m;
+        this.hline = new HLine(0,1,0);
+        const attributes = this.attributes = { position: { data: new Array(2*m), numComponents: 2 } };    
+        this._computePts(this.hline);
+        this.createBufferInfo(attributes);
+    }  
+
+    _computePts(hline) {
+        const m = this.m;
+        const buffer = this.attributes.position.data;
+        for(let i=0;i<m;i++) {
+            let p = hline.getPoint(i/(m-1),0.0);
+            buffer[i*2] = p.x;
+            buffer[i*2+1] = p.y;            
+        }
+    }
+    setByPoints(p0, p1) {
+        this.hline.setByPoints(p0,p1);
+        this._computePts(this.hline);
+        twgl.setAttribInfoBufferFromArray(this.gl, this.bufferInfo.attribs.position, this.attributes.position);
+    }
+    setHLine(hline) {
+        this.hline.setParameters(hline.cx,hline.cy,hline.w);
+        this._computePts(this.hline);
+        twgl.setAttribInfoBufferFromArray(this.gl, this.bufferInfo.attribs.position, this.attributes.position);
+    }
+}
+
+
+class HLineThinDashedMesh extends Mesh {
+    constructor(gl, material, m) {
+        super(gl, gl.LINES, material);
         this.m = m;
         this.hline = new HLine(0,1,0);
         const attributes = this.attributes = { position: { data: new Array(2*m), numComponents: 2 } };    
@@ -476,3 +513,5 @@ class HPseudoSphereMesh extends Mesh {
         }
     }
 }
+
+export { Circle, Disk, HLineThinMesh, HLineThinDashedMesh }

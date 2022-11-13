@@ -1,5 +1,7 @@
 "use strict";
 
+import { Point, HLine } from "./geometry.js";
+
 class DiagramPoint extends Point {
     constructor(x,y) {
         super(x,y);
@@ -52,6 +54,7 @@ class Diagram {
     constructor() {
         this.points = [];
         this.lines = [];
+        this.mirrors = [];
     }
 
     adjustPoint(p) {
@@ -83,11 +86,22 @@ class Diagram {
         this.lines.splice(j,1); 
         line.dtor();
     }
+    createMirror() {
+        let line = new DiagramLine();
+        this.mirrors.push(line); 
+        return line;
+    }
+    removeMirror(line) { 
+        let j = this.mirrors.indexOf(line); 
+        if(j<0) return;              
+        this.mirrors.splice(j,1); 
+        line.dtor();
+    }
 
     getClosestPoint(p, maxWorldDistance) {
         let d = maxWorldDistance;
         let lst = this.points
-            .map(q=>({q, d:getDistance(p,q)}))
+            .map(q=>({q, d:Point.getDistance(p,q)}))
             .filter(q=>q.d<d)
             .sort((a,b)=>a.d-b.d)
             .map(q=>q.q);
@@ -95,8 +109,8 @@ class Diagram {
     } 
 
     getClosestLine(p, maxWorldDistance) {
-        let d = maxWorldDistance;
-        let lst = this.lines
+        let d = maxWorldDistance;        
+        let lst = [...this.lines, ...this.mirrors]
             .map(q=>({q, d:q.getDist(p)}))
             .filter(q=>q.d<d)
             .sort((a,b)=>a.d-b.d)
@@ -108,32 +122,60 @@ class Diagram {
         pos = this.adjustPoint(pos);
         point.x = pos.x;
         point.y = pos.y;
-        point.lines.forEach(line => {
-            if(line.points.length == 2) {
-                line.setByPoints(line.points[0], line.points[1]);
-            }
-        })
+        point.lines.forEach(line => this.updateLineFromPoints(line));
     }
 
     moveLine(line, pos) {
         pos = this.adjustPoint(pos);
-        let params = line.points.map(p=>line.getParameterAt(p));
         line.moveTo(pos);
-        line.points.forEach((p,i) => {
-            let q = line.getPoint(params[i]);
-            p.x = q.x;
-            p.y = q.y;
+        // move line points
+        line.points.forEach(p => {
+            let param = line.getParameterAt(p);
+            let q = line.getPoint(param);
+            p.copyFrom(q);
+            p.lines.filter(other=>other!=line).forEach(other => this.updateLineFromPoints(other));
+        });
+    }
+
+    onLineMoved(line) {
+        line.points.forEach(p => {
+            let param = line.getParameterAt(p);
+            let q = line.getPoint(param);
+            p.copyFrom(q);
             p.lines.filter(other=>other!=line).forEach(other => {
                 if(other.points.length == 2) {
                     other.setByPoints(other.points[0], other.points[1]);
                 }
             })
         });
+    }
 
+    updateLineFromPoints(line) {
+        const epsilon = 0.00001;
+        const m = line.points.length;
+        if(m == 0) return;
+        else if(m == 1) {
+            let p = line.points[0];
+            let q = line.projectPoint(p);
+            if(Point.getDistance(p,q) < epsilon) return;
+            line.moveTo(p);
+        } else {
+            let p0 = line.points[0], p1 = line.points[m-1];
+            /*if(line.points.length>2) {
+                let params = line.points.map((p,i)=>[i, line.getParameterAt(p)]).sort((a,b)=>a[1]-b[1]);
+                p0 = line.points[params[0][0]];
+                p1 = line.points[params[m-1][0]];
+            }*/
+            line.setByPoints(p0,p1);
+
+        }
     }
 
     clear() {
         this.points = [];
         this.lines = [];
+        this.mirrors = [];
     }
 }
+
+export default Diagram
